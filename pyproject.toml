@@ -5,9 +5,7 @@ description = "Macro-scale maritime traffic simulator with visualization"
 readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
-authors = [
-    { name = "Maritime Simulator Team" }
-]
+authors = [{ name = "Maritime Simulator Team" }]
 
 dependencies = [
     "dash>=2.14.0",
@@ -17,13 +15,15 @@ dependencies = [
     "ruff>=0.16.7",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest>=7.4.0",
-    "black>=24.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.8.0",
+    "mypy>=2.3.1",
+    "notebook>=7.6.2",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "ruff>=0.16.7",
 ]
+
 
 [project.scripts]
 seamulator = "seamulator.visualization.app:main"
@@ -52,3 +52,4 @@ strict = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
