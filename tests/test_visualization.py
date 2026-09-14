@@ -1,6 +1,5 @@
 """Tests for maritime traffic visualization."""
 
-
 from seamulator.data.sample_data import (
     PORTS,
     VESSEL_TYPES,

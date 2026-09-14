@@ -61,9 +61,7 @@ app.layout = html.Div(
     Input("refresh-button", "n_clicks"),
     prevent_initial_call=True,
 )
-def update_vessel_data(
-    num_vessels: int, n_clicks: int | None
-) -> list[dict[str, Any]]:
+def update_vessel_data(num_vessels: int, n_clicks: int | None) -> list[dict[str, Any]]:
     """Generate new vessel data based on slider value or refresh button."""
     if n_clicks is None:
         raise no_update
