@@ -43,7 +43,8 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 - **Package Manager**: uv
 - **Visualization**: Dash + Plotly
 - **Data Processing**: pandas, numpy
-- **Type System**: Full type hints with mypy
+- **Data Validation**: pandera
+- **Type System**: Full type hints with mypy, typing library
 - **Code Quality**: black, ruff
 
 ## Agent Guidelines
@@ -51,6 +52,7 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 ### Code Style
 - Follow existing style (black formatting, 88 char line length)
 - Use type hints for all public functions
+- **Strong typing**: Use `typing` library for complex types (Protocol, TypedDict, etc.) and `pandera` for DataFrame validation schemas
 - Include docstrings for all modules, classes, and public functions
 - Keep imports organized and minimal
 
@@ -65,12 +67,15 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 - Maintain >90% test coverage for core modules
 - Use pytest for test framework
 - Include both unit and integration tests
+- **Always write tests** when the user requests a new feature, while the associated tests have not been created
 
 ### Code Quality
 - **ALWAYS run `ruff check` and `ruff format` after completing any task**
 - Fix all ruff linting errors before committing
 - Run `black check` to verify formatting
 - Use `mypy` for type checking on critical modules
+- **Pre-commit hooks**: Setup pre-commit to run `ruff check` on every commit. If `ruff check` fails, the commit must fail
+- **Always run `ruff format` before committing** to ensure consistent code formatting
 
 ### Documentation
 - Update docstrings when adding new functionality
