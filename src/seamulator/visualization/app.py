@@ -15,8 +15,8 @@ from seamulator.visualization.components.controls import (
 from seamulator.visualization.components.traffic_map import TrafficMap
 
 # Global settings
-NUM_VESSELS = 100
-TIME_INTERVAL = 100
+NUM_VESSELS = 20
+TIME_INTERVAL = 500  # ms
 
 # Initialize the simulation backend
 simulation = MaritimeSimulation(num_vessels=NUM_VESSELS)
@@ -123,7 +123,6 @@ def update_simulation(
     """Update simulation state and map display."""
     from dash import callback_context
 
-    logger.debug("Update simulation callback triggered")
     disabled = False
     # Determine which button was clicked
     if not callback_context.triggered:
@@ -157,7 +156,7 @@ def update_simulation(
     # Get current vessel positions and update the map
     logger.debug("Getting vessel positions")
     vessels = simulation.get_vessel_positions()
-    logger.debug(f"Updating traffic map with {len(vessels)} vessels")
+    logger.info(f"Updating traffic map with {len(vessels)} vessels")
     traffic_map.update_vessels(vessels)
 
     # Update stats

@@ -47,6 +47,8 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 - **Type System**: Full type hints with mypy, typing library
 - **Code Quality**: ruff
 - **Routing**: searoute, networkx
+- **Geospatial**: haversine
+- **Logging**: Python logging
 
 ## Agent Guidelines
 
@@ -86,6 +88,7 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 ```
 seamulator/
 ├── src/seamulator/
+│   ├── core/           # Core utilities (logging, etc.)
 │   ├── data/           # Data models, generators, loaders
 │   ├── visualization/  # All UI/visualization code
 │   │   ├── components/ # Reusable UI components
@@ -109,17 +112,29 @@ seamulator/
   - North Sea focus: ports and vessel spawning in North Sea region
   - Map centered on North Sea (55°N, 5°E) with zoom level 5
 
-- **Phase 3**: IN PROGRESS
+- **Phase 3**: COMPLETE ✓
   - Discrete event-time simulation engine
   - searoute library integration for maritime route calculation
-  - Vessel movement along calculated paths
-  - Vessel state: position, speed (5-15 knots), route, destination
-  - Simulation controls: start, pause, reset, set_speed_factor
+  - Vessel movement along calculated paths with haversine distance
+  - Vessel state: position, speed (5-15 knots), route, destination, heading
+  - Simulation controls: start, pause, reset, set_speed_factor, step
   - RouteCalculator class for pathfinding between ports
   - MaritimeSimulation class with step-based advancement
-  - 13 new tests for simulation functionality
+  - `get_vessel()` and `add_vessel()` methods for vessel management
+  - `calculate_bearing()` function for heading calculation
+  - Vessel heading updated at each step to point to next waypoint
+  - 22 passing tests including vessel movement verification
 
-- **Next**: Phase 3 - Simulation visualization integration
+- **Phase 3.5**: COMPLETE ✓
+  - Core utilities module with logging configuration
+  - DEBUG logging added to simulation step, vessel updates, and visualization
+  - TrafficMap class for efficient figure updates (no recreate_base_map on each update)
+  - Simulation integrated into Dash app with Play/Pause/Step/Reset controls
+  - Vessels displayed as oriented triangles based on heading
+  - Real-time statistics display with simulation time and state
+  - Auto-update when simulation is playing (500ms interval)
+
+- **Next**: Phase 4 - Advanced Features
 
 ## Quick Start
 
@@ -135,6 +150,9 @@ uv run python -m pytest tests/ -v
 # Linting and Formatting
 uv run ruff check src/ tests/
 uv run ruff format src/ tests/
+
+# View logs (DEBUG level during development)
+# Logs are automatically displayed in console during app execution
 ```
 
 ## Workflow Requirements

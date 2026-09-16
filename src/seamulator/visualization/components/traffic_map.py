@@ -4,7 +4,6 @@ from typing import Any
 
 import plotly.graph_objects as go
 
-from seamulator.core.logging_config import logger
 from seamulator.visualization.components.map import create_base_map
 
 
@@ -59,16 +58,12 @@ class TrafficMap:
             get_vessel_marker_size,
         )
 
-        logger.info(f"Updating traffic map with {len(vessels)} vessels")
-
         # Clear existing vessel traces
         # Find all scattermap traces and remove them
         traces_to_remove = []
         for idx, trace in enumerate(self.fig.data):
             if hasattr(trace, "type") and trace.type == "scattermap":
                 traces_to_remove.append(idx)
-
-        logger.debug(f"Removing {len(traces_to_remove)} old vessel traces")
 
         # Remove traces in reverse order to avoid index shifting
         for idx in sorted(traces_to_remove, reverse=True):
