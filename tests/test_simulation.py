@@ -159,14 +159,6 @@ class TestMaritimeSimulation:
         simulation.step(time_delta=1.0)
         assert simulation.get_state()["time"] > initial_time
 
-    def test_haversine_distance(self, simulation: MaritimeSimulation) -> None:
-        """Test haversine distance calculation."""
-        lat1, lon1 = 50.0, 0.0
-        lat2, lon2 = 50.0 + 1 / 60, 0.0
-
-        distance = simulation._haversine_distance(lat1, lon1, lat2, lon2)
-        assert abs(distance - 1.0) < 0.1
-
     def test_vessels_stay_in_north_sea(self, simulation: MaritimeSimulation) -> None:
         """Test that vessels stay within North Sea bounds."""
         simulation.start()

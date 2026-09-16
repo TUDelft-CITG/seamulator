@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+from haversine import Unit, haversine
 from typing_extensions import TypedDict
 
 from seamulator.data.sample_data import PORTS
@@ -139,10 +140,8 @@ class MaritimeSimulation:
             current_pos = vessel["current_position"]
             next_pos = vessel["route"][vessel["route_index"] + 1]
 
-            # Haversine formula to calculate distance between two points
-            distance_nm = self._haversine_distance(
-                current_pos[0], current_pos[1], next_pos[0], next_pos[1]
-            )
+            # Use haversine library to calculate distance in nautical miles
+            distance_nm = haversine(current_pos, next_pos, unit=Unit.NAUTICAL_MILES)
 
             # Time to reach next waypoint in hours
             # time = distance / speed
@@ -188,9 +187,7 @@ class MaritimeSimulation:
         current_pos = vessel["current_position"]
         next_pos = vessel["route"][vessel["route_index"] + 1]
 
-        distance_nm = self._haversine_distance(
-            current_pos[0], current_pos[1], next_pos[0], next_pos[1]
-        )
+        distance_nm = haversine(current_pos, next_pos, unit=Unit.NAUTICAL_MILES)
         time_to_next = distance_nm / vessel["speed"]
 
         if time_delta >= time_to_next:
@@ -234,43 +231,6 @@ class MaritimeSimulation:
         vessel["route_index"] = 0
 
         return vessel
-
-    def _haversine_distance(
-        self, lat1: float, lon1: float, lat2: float, lon2: float
-    ) -> float:
-        """Calculate the great-circle distance between two points in nautical miles.
-
-        Args:
-            lat1: Latitude of point 1 in degrees.
-            lon1: Longitude of point 1 in degrees.
-            lat2: Latitude of point 2 in degrees.
-            lon2: Longitude of point 2 in degrees.
-
-        Returns:
-            Distance in nautical miles.
-        """
-        # Earth radius in nautical miles
-        earth_radius_nm = 3440.069
-
-        # Convert to radians
-        lat1_rad = np.radians(lat1)
-        lon1_rad = np.radians(lon1)
-        lat2_rad = np.radians(lat2)
-        lon2_rad = np.radians(lon2)
-
-        # Differences
-        dlat = lat2_rad - lat1_rad
-        dlon = lon2_rad - lon1_rad
-
-        # Haversine formula
-        a = (
-            np.sin(dlat / 2) ** 2
-            + np.cos(lat1_rad) * np.cos(lat2_rad) * np.sin(dlon / 2) ** 2
-        )
-        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-        distance = earth_radius_nm * c
-
-        return float(distance)
 
     def get_vessel_positions(self) -> list[dict[str, Any]]:
         """Get current positions of all vessels for visualization.

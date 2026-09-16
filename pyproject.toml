@@ -15,6 +15,7 @@ dependencies = [
     "ruff>=0.16.7",
     "searoute>=1.6.0",
     "networkx>=3.0",
+    "haversine>=2.5.0",
 ]
 
 [dependency-groups]

@@ -1,8 +1,7 @@
 """Route calculation using searoute library for maritime paths."""
 
-import math
-
 import searoute as sr
+from haversine import Unit, haversine
 
 
 class RouteCalculator:
@@ -56,50 +55,18 @@ class RouteCalculator:
         route_feature = sr.searoute(origin, destination)
         coords = route_feature["geometry"]["coordinates"]
 
-        # Calculate distance using haversine formula
+        # Calculate distance using haversine library
         total_distance_nm = 0.0
         prev_point = coords[0]
 
         for point in coords[1:]:
             prev_lon, prev_lat = prev_point
             curr_lon, curr_lat = point
-            segment_distance = self._haversine_distance(
-                prev_lat, prev_lon, curr_lat, curr_lon
+            # haversine expects (lat, lon) tuples
+            segment_distance = haversine(
+                (prev_lat, prev_lon), (curr_lat, curr_lon), unit=Unit.NAUTICAL_MILES
             )
             total_distance_nm += segment_distance
             prev_point = point
 
         return round(total_distance_nm, 2)
-
-    def _haversine_distance(
-        self, lat1: float, lon1: float, lat2: float, lon2: float
-    ) -> float:
-        """Calculate the great-circle distance between two points in nautical miles.
-
-        Args:
-            lat1: Latitude of point 1 in degrees.
-            lon1: Longitude of point 1 in degrees.
-            lat2: Latitude of point 2 in degrees.
-            lon2: Longitude of point 2 in degrees.
-
-        Returns:
-            Distance in nautical miles.
-        """
-        earth_radius_nm = 3440.069
-
-        lat1_rad = math.radians(lat1)
-        lon1_rad = math.radians(lon1)
-        lat2_rad = math.radians(lat2)
-        lon2_rad = math.radians(lon2)
-
-        dlat = lat2_rad - lat1_rad
-        dlon = lon2_rad - lon1_rad
-
-        a = (
-            math.sin(dlat / 2) ** 2
-            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
-        )
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        distance = earth_radius_nm * c
-
-        return distance
