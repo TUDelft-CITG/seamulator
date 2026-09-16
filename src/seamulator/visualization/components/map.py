@@ -25,8 +25,8 @@ def create_base_map(style: str = "open-street-map") -> go.Figure:
     fig.update_layout(
         map={
             "style": style,
-            "center": {"lat": 20, "lon": 0},
-            "zoom": 1,
+            "center": {"lat": 55, "lon": 5},
+            "zoom": 5,
         },
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         showlegend=True,

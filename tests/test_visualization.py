@@ -78,9 +78,9 @@ class TestMapComponents:
         assert "map" in fig.layout
         assert fig.layout.map.style == "open-street-map"
         # Center is a Center object in plotly 7
-        assert fig.layout.map.center.lat == 20
-        assert fig.layout.map.center.lon == 0
-        assert fig.layout.map.zoom == 1
+        assert fig.layout.map.center.lat == 55
+        assert fig.layout.map.center.lon == 5
+        assert fig.layout.map.zoom == 4
 
     def test_get_vessel_marker_size(self):
         """Test marker size calculation."""

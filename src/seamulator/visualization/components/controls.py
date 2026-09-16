@@ -84,7 +84,6 @@ def create_info_panel() -> html.Div:
     Returns:
         HTML div containing info panel.
     """
-    return ""
     info_panel = html.Div(
         [
             html.Div(

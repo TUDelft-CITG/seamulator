@@ -20,15 +20,23 @@ VESSEL_TYPES = {
 # Major port coordinates (lat, lon)
 PORTS = {
     "Rotterdam": (51.9225, 4.4792),
-    "Shanghai": (31.2304, 121.4737),
-    "Singapore": (1.3521, 103.8198),
-    "Hong Kong": (22.3193, 114.1694),
     "Antwerp": (51.2194, 4.4022),
-    "Los Angeles": (33.7128, -118.2707),
     "Hamburg": (53.5511, 9.9937),
-    "Dubai": (25.2048, 55.2708),
-    "New York": (40.6892, -74.0445),
-    "Tokyo": (35.6895, 139.6917),
+    "Amsterdam": (52.3676, 4.9041),
+    "Bremen": (53.0793, 8.8017),
+    "Zeebrugge": (51.3494, 3.2247),
+    "Felixstowe": (51.9642, 1.3526),
+    "Gothenburg": (57.7089, 11.9746),
+    "Copenhagen": (55.6761, 12.5683),
+    "Oslo": (59.9139, 10.7522),
+}
+
+# North Sea boundary (approx)
+NORTH_SEA_BOUNDS = {
+    "min_lat": 48.0,
+    "max_lat": 61.0,
+    "min_lon": -5.0,
+    "max_lon": 15.0,
 }
 
 
@@ -49,11 +57,11 @@ def generate_vessel_name(vessel_type: str, index: int) -> str:
 
 
 def generate_random_vessel() -> dict[str, Any]:
-    """Generate a single random vessel with all attributes."""
+    """Generate a single random vessel with all attributes in the North Sea."""
     vessel_type = np.random.choice(list(VESSEL_TYPES.keys()))
     vessel_info = VESSEL_TYPES[vessel_type]
 
-    # Random position near a port
+    # Random position near a North Sea port
     port_name = np.random.choice(list(PORTS.keys()))
     port_lat, port_lon = PORTS[port_name]
 
@@ -64,8 +72,9 @@ def generate_random_vessel() -> dict[str, Any]:
     lat = port_lat + lat_offset
     lon = port_lon + lon_offset
 
-    # Ensure valid latitude range
-    lat = np.clip(lat, -89.9, 89.9)
+    # Ensure position stays within North Sea bounds
+    lat = np.clip(lat, NORTH_SEA_BOUNDS["min_lat"], NORTH_SEA_BOUNDS["max_lat"])
+    lon = np.clip(lon, NORTH_SEA_BOUNDS["min_lon"], NORTH_SEA_BOUNDS["max_lon"])
 
     return {
         "name": generate_vessel_name(vessel_type, np.random.randint(1000, 9999)),
