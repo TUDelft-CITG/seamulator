@@ -16,6 +16,7 @@ from seamulator.visualization.components.traffic_map import TrafficMap
 
 # Global settings
 NUM_VESSELS = 100
+TIME_INTERVAL = 100
 
 # Initialize the simulation backend
 simulation = MaritimeSimulation(num_vessels=NUM_VESSELS)
@@ -36,7 +37,9 @@ app.layout = html.Div(
         # Map container
         html.Div(
             [
-                dcc.Interval(id="simulation-interval", interval=1000, n_intervals=0),
+                dcc.Interval(
+                    id="simulation-interval", interval=TIME_INTERVAL, n_intervals=0
+                ),
                 dcc.Graph(
                     id="traffic-map",
                     config={

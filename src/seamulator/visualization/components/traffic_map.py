@@ -106,7 +106,7 @@ class TrafficMap:
             ]
 
             # Convert compass bearing to plotly angle
-            angles = [90 - h for h in headings]
+            # angles = [90 - h for h in headings]
 
             self.fig.add_trace(
                 go.Scattermap(
@@ -116,10 +116,10 @@ class TrafficMap:
                     marker={
                         "size": sizes,
                         "color": colors,
-                        "opacity": 0.8,
-                        "sizemode": "diameter",
-                        "symbol": [self.triangle_path] * len(lats),
-                        "angle": angles,
+                        # "opacity": 0.8,
+                        # "sizemode": "diameter", # Custom symbols do not work
+                        # "symbol": [self.triangle_path] * len(lats),
+                        # "angle": angles,
                     },
                     name=vessel_type,
                     hovertext=hover_texts,
