@@ -4,24 +4,26 @@ from datetime import UTC, datetime
 from typing import Any
 
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, callback, dcc, html, no_update
+from dash import Dash, Input, Output, callback, dcc, html
 
 from seamulator.data.sample_data import generate_traffic_data
 from seamulator.visualization.components.controls import (
     create_control_panel,
     create_info_panel,
-    get_all_vessel_types,
 )
 from seamulator.visualization.components.map import (
     add_vessels_to_map,
     create_base_map,
 )
 
+# Global settings
+NUM_VESSELS = 100
+
 # Initialize the Dash app
 app = Dash(__name__, suppress_callback_exceptions=True)
 
 # Initial data
-initial_vessels = generate_traffic_data(100)
+initial_vessels = generate_traffic_data(NUM_VESSELS)
 
 # App layout
 app.layout = html.Div(
@@ -42,7 +44,7 @@ app.layout = html.Div(
                     style={"width": "100vw", "height": "100vh"},
                 ),
                 # Control Panel
-                create_control_panel(get_all_vessel_types()),
+                create_control_panel([]),
                 # Info Panel
                 create_info_panel(),
                 # Hidden div for hover info
@@ -57,64 +59,30 @@ app.layout = html.Div(
 
 @callback(
     Output("vessel-data-store", "data"),
-    Input("vessel-count-slider", "value"),
     Input("refresh-button", "n_clicks"),
     prevent_initial_call=True,
 )
-def update_vessel_data(num_vessels: int, n_clicks: int | None) -> list[dict[str, Any]]:
-    """Generate new vessel data based on slider value or refresh button."""
-    if n_clicks is None:
-        raise no_update
-
-    vessels = generate_traffic_data(num_vessels)
-    return vessels
-
-
-@callback(
-    Output("vessel-data-store", "data", allow_duplicate=True),
-    Input("vessel-count-slider", "value"),
-    State("vessel-data-store", "data"),
-    prevent_initial_call=True,
-)
-def update_vessel_data_slider(
-    num_vessels: int, current_data: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
-    """Update vessel data when slider changes (not from refresh button)."""
-    if len(current_data) == num_vessels:
-        raise no_update
-
-    vessels = generate_traffic_data(num_vessels)
+def refresh_vessel_data(n_clicks: int | None) -> list[dict[str, Any]]:
+    """Generate new vessel data when refresh button is clicked."""
+    vessels = generate_traffic_data(NUM_VESSELS)
     return vessels
 
 
 @callback(
     Output("traffic-map", "figure"),
     Input("vessel-data-store", "data"),
-    Input("vessel-type-filter", "value"),
-    Input("map-style", "value"),
-    Input("show-labels", "value"),
 )
-def update_map(
-    vessels: list[dict[str, Any]],
-    selected_types: list[str] | None,
-    map_style: str,
-    show_labels: list[str] | None,
-) -> go.Figure:
-    """Update the traffic map based on current filters and data."""
+def update_map(vessels: list[dict[str, Any]]) -> go.Figure:
+    """Update the traffic map with current vessel data."""
     if not vessels:
         # Generate default data if empty
-        vessels = generate_traffic_data(100)
+        vessels = generate_traffic_data(NUM_VESSELS)
 
-    if selected_types is None or len(selected_types) == 0:
-        selected_types = get_all_vessel_types()
+    # Create the map with default style
+    fig = create_base_map()
 
-    show_labels_flag = "show" in show_labels if show_labels else False
-
-    # Create the map with the selected style
-    fig = create_base_map(map_style)
-
-    # Add vessels
-    fig = add_vessels_to_map(fig, vessels, selected_types, show_labels_flag)
+    # Add all vessels without filtering
+    fig = add_vessels_to_map(fig, vessels)
 
     # Update layout
     fig.update_layout(
@@ -135,32 +103,24 @@ def update_map(
 @callback(
     Output("vessel-stats", "children"),
     Input("vessel-data-store", "data"),
-    Input("vessel-type-filter", "value"),
 )
-def update_stats(
-    vessels: list[dict[str, Any]], selected_types: list[str] | None
-) -> str:
+def update_stats(vessels: list[dict[str, Any]]) -> str:
     """Update the statistics display."""
     if not vessels:
         return "No vessel data"
 
-    if selected_types and len(selected_types) > 0:
-        filtered_vessels = [v for v in vessels if v["type"] in selected_types]
-    else:
-        filtered_vessels = vessels
-
     # Count by type
     type_counts = {}
-    for v in filtered_vessels:
+    for v in vessels:
         vtype = v["type"]
         type_counts[vtype] = type_counts.get(vtype, 0) + 1
 
     # Calculate statistics
-    speeds = [v["speed"] for v in filtered_vessels]
+    speeds = [v["speed"] for v in vessels]
     avg_speed = sum(speeds) / len(speeds) if speeds else 0
     max_speed = max(speeds) if speeds else 0
 
-    stats_text = f"""Total Vessels: {len(filtered_vessels)}
+    stats_text = f"""Total Vessels: {len(vessels)}
 
 By Type:
 """

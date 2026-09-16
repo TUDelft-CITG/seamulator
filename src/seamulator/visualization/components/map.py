@@ -6,9 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # Mapbox access token (using public token for basic functionality)
-MAPBOX_TOKEN = (
-    "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6Im5rbXl5ZzI2MzIxbnAifQ.T62qn4tY92LLjQ92XxHJg"
-)
+# MAPBOX_TOKEN = (
+#     "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6Im5rbXl5ZzI2MzIxbnAifQ.T62qn4tY92LLjQ92XxHJg"
+# )
 
 
 def create_base_map(style: str = "open-street-map") -> go.Figure:

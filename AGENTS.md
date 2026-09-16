@@ -45,12 +45,12 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 - **Data Processing**: pandas, numpy
 - **Data Validation**: pandera
 - **Type System**: Full type hints with mypy, typing library
-- **Code Quality**: black, ruff
+- **Code Quality**: ruff
 
 ## Agent Guidelines
 
 ### Code Style
-- Follow existing style (black formatting, 88 char line length)
+- Follow existing style (88 char line length)
 - Use type hints for all public functions
 - **Strong typing**: Use `typing` library for complex types (Protocol, TypedDict, etc.) and `pandera` for DataFrame validation schemas
 - Include docstrings for all modules, classes, and public functions
@@ -72,7 +72,6 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 ### Code Quality
 - **ALWAYS run `ruff check` and `ruff format` after completing any task**
 - Fix all ruff linting errors before committing
-- Run `black check` to verify formatting
 - Use `mypy` for type checking on critical modules
 - **Pre-commit hooks**: Setup pre-commit to run `ruff check` on every commit. If `ruff check` fails, the commit must fail
 - **Always run `ruff format` before committing** to ensure consistent code formatting
@@ -121,7 +120,6 @@ uv run python -m pytest tests/ -v
 # Linting and Formatting
 uv run ruff check src/
 uv run ruff format src/
-uv run black check src/
 ```
 
 ## Workflow Requirements
