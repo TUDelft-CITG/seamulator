@@ -159,6 +159,66 @@ class TestMaritimeSimulation:
         simulation.step(time_delta=1.0)
         assert simulation.get_state()["time"] > initial_time
 
+    def test_step_vessel_movement(self) -> None:
+        """Test that a vessel moves correctly after one step."""
+        # Create simulation with no vessels
+        simulation = MaritimeSimulation(num_vessels=0)
+        simulation.start()
+
+        # Add a preconfigured vessel from Rotterdam to Hamburg
+        vessel_id = simulation.add_vessel(
+            name="TestVessel",
+            vessel_type="Cargo",
+            current_port="Rotterdam",
+            destination_port="Hamburg",
+            speed=10.0,
+            color="#FF0000",
+            size=1.0,
+        )
+
+        # Get initial vessel state
+        initial_vessel = simulation.get_vessel(vessel_id)
+
+        # Verify vessel starts at Rotterdam (or near it)
+        initial_pos = initial_vessel["current_position"]
+        rotterdam_pos = PORTS["Rotterdam"]
+        assert abs(initial_pos[0] - rotterdam_pos[0]) < 0.1
+        assert abs(initial_pos[1] - rotterdam_pos[1]) < 0.1
+
+        # Verify vessel has a route with at least 2 waypoints
+        assert len(initial_vessel["route"]) >= 2
+
+        # Verify destination port is Hamburg
+        assert initial_vessel["destination_port"] == "Hamburg"
+
+        # Store initial position and heading
+        initial_lat = initial_vessel["current_position"][0]
+        initial_lon = initial_vessel["current_position"][1]
+        initial_heading = initial_vessel["heading"]
+
+        # Take one step
+        simulation.step(time_delta=1.0)
+
+        # Get updated vessel state
+        updated_vessel = simulation.get_vessel(vessel_id)
+
+        # Verify vessel has moved (position should be different)
+        updated_lat = updated_vessel["current_position"][0]
+        updated_lon = updated_vessel["current_position"][1]
+
+        # The vessel should have moved from its initial position
+        assert (updated_lat, updated_lon) != (initial_lat, initial_lon)
+
+        # Verify heading has been updated and is valid (0-360 degrees)
+        updated_heading = updated_vessel["heading"]
+        assert 0 <= updated_heading <= 360
+        # Verify heading has changed (vessel is facing a different direction)
+        # Allow for floating point precision and wrap-around at 360
+        assert (
+            abs(updated_heading - initial_heading) > 0.01
+            or abs((updated_heading - initial_heading + 360) % 360) > 0.01
+        )
+
     def test_vessels_stay_in_north_sea(self, simulation: MaritimeSimulation) -> None:
         """Test that vessels stay within North Sea bounds."""
         simulation.start()
