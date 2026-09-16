@@ -5,6 +5,19 @@ from typing import Any
 import plotly.express as px
 import plotly.graph_objects as go
 
+
+def create_triangle_path() -> str:
+    """Create SVG path for a triangle marker.
+
+    Returns:
+        SVG path string for an equilateral triangle pointing upwards.
+    """
+    # Triangle with base at bottom, pointing up (north)
+    # Coordinates: top (0,1), bottom-left (-0.5,-0.5), bottom-right (0.5,-0.5)
+    # Normalized to fit in a 1x1 box
+    return "M 0 0.5 L -0.5 -0.5 L 0.5 -0.5 Z"
+
+
 # Mapbox access token (using public token for basic functionality)
 # MAPBOX_TOKEN = (
 #     "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6Im5rbXl5ZzI2MzIxbnAifQ.T62qn4tY92LLjQ92XxHJg"
@@ -111,6 +124,11 @@ def add_vessels_to_map(
             )
         ]
 
+        # Use custom triangle markers with rotation based on heading
+        # Convert compass bearing (0=N, 90=E) to plotly angle (0=E, 90=N)
+        angles = [90 - h for h in headings]
+        triangle_path = create_triangle_path()
+
         fig.add_trace(
             go.Scattermap(
                 lat=lats,
@@ -121,6 +139,8 @@ def add_vessels_to_map(
                     "color": colors,
                     "opacity": 0.8,
                     "sizemode": "diameter",
+                    "symbol": [triangle_path] * len(lats),
+                    "angle": angles,
                 },
                 name=vessel_type,
                 hovertext=hover_texts,

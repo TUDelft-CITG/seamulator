@@ -3,6 +3,101 @@
 from dash import html
 
 
+def create_simulation_controls() -> html.Div:
+    """Create simulation control buttons.
+
+    Returns:
+        HTML div containing simulation control buttons.
+    """
+    return html.Div(
+        [
+            html.Div(
+                "Simulation Controls",
+                style={
+                    "fontWeight": "bold",
+                    "fontSize": "16px",
+                    "padding": "10px",
+                    "backgroundColor": "#34495e",
+                    "color": "white",
+                    "borderRadius": "5px 5px 0 0",
+                },
+            ),
+            html.Div(
+                [
+                    html.Button(
+                        "▶ Play",
+                        id="play-button",
+                        style={
+                            "width": "100%",
+                            "padding": "8px",
+                            "margin": "5px 0",
+                            "backgroundColor": "#27ae60",
+                            "color": "white",
+                            "border": "none",
+                            "borderRadius": "4px",
+                            "cursor": "pointer",
+                            "fontSize": "14px",
+                        },
+                    ),
+                    html.Button(
+                        "⏸ Pause",
+                        id="pause-button",
+                        style={
+                            "width": "100%",
+                            "padding": "8px",
+                            "margin": "5px 0",
+                            "backgroundColor": "#e74c3c",
+                            "color": "white",
+                            "border": "none",
+                            "borderRadius": "4px",
+                            "cursor": "pointer",
+                            "fontSize": "14px",
+                        },
+                    ),
+                    html.Button(
+                        "⏭ Step",
+                        id="step-button",
+                        style={
+                            "width": "100%",
+                            "padding": "8px",
+                            "margin": "5px 0",
+                            "backgroundColor": "#3498db",
+                            "color": "white",
+                            "border": "none",
+                            "borderRadius": "4px",
+                            "cursor": "pointer",
+                            "fontSize": "14px",
+                        },
+                    ),
+                    html.Button(
+                        "🔄 Reset",
+                        id="reset-button",
+                        style={
+                            "width": "100%",
+                            "padding": "8px",
+                            "margin": "5px 0",
+                            "backgroundColor": "#f39c12",
+                            "color": "white",
+                            "border": "none",
+                            "borderRadius": "4px",
+                            "cursor": "pointer",
+                            "fontSize": "14px",
+                        },
+                    ),
+                ],
+                style={"padding": "10px"},
+            ),
+        ],
+        style={
+            "marginTop": "10px",
+            "backgroundColor": "white",
+            "borderRadius": "5px",
+            "boxShadow": "0 2px 10px rgba(0,0,0,0.2)",
+            "fontFamily": "Arial, sans-serif",
+        },
+    )
+
+
 def create_control_panel(
     vessel_types: list[str],
 ) -> html.Div:
@@ -58,6 +153,7 @@ def create_control_panel(
                             ),
                         ],
                     ),
+                    create_simulation_controls(),
                 ],
                 style={"padding": "10px"},
             ),

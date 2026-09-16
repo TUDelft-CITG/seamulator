@@ -6,7 +6,7 @@ from typing import Any
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, callback, dcc, html
 
-from seamulator.data.sample_data import generate_traffic_data
+from seamulator.simulation.simulation import MaritimeSimulation
 from seamulator.visualization.components.controls import (
     create_control_panel,
     create_info_panel,
@@ -17,20 +17,22 @@ from seamulator.visualization.components.map import (
 )
 
 # Global settings
-NUM_VESSELS = 100
+NUM_VESSELS = 20
+
+# Initialize the simulation backend
+simulation = MaritimeSimulation(num_vessels=NUM_VESSELS)
+simulation.pause()
 
 # Initialize the Dash app
 app = Dash(__name__, suppress_callback_exceptions=True)
 
-# Initial data
-initial_vessels = generate_traffic_data(NUM_VESSELS)
-
 # App layout
 app.layout = html.Div(
     [
-        # Store for vessel data
-        dcc.Store(id="vessel-data-store", data=initial_vessels),
-        dcc.Store(id="last-refresh", data=datetime.now(UTC).isoformat()),
+        # Store for simulation state
+        dcc.Store(id="last-update", data=datetime.now(UTC).isoformat()),
+        # Interval for auto-update when playing
+        dcc.Interval(id="simulation-interval", interval=500, n_intervals=0),
         # Map container
         html.Div(
             [
@@ -57,70 +59,29 @@ app.layout = html.Div(
 )
 
 
-@callback(
-    Output("vessel-data-store", "data"),
-    Input("refresh-button", "n_clicks"),
-    prevent_initial_call=True,
-)
-def refresh_vessel_data(n_clicks: int | None) -> list[dict[str, Any]]:
-    """Generate new vessel data when refresh button is clicked."""
-    vessels = generate_traffic_data(NUM_VESSELS)
-    return vessels
+def update_simulation_stats() -> str:
+    """Generate statistics text from simulation state."""
+    state = simulation.get_state()
+    vessels = state["vessels"]
 
-
-@callback(
-    Output("traffic-map", "figure"),
-    Input("vessel-data-store", "data"),
-)
-def update_map(vessels: list[dict[str, Any]]) -> go.Figure:
-    """Update the traffic map with current vessel data."""
-    if not vessels:
-        # Generate default data if empty
-        vessels = generate_traffic_data(NUM_VESSELS)
-
-    # Create the map with default style
-    fig = create_base_map()
-
-    # Add all vessels without filtering
-    fig = add_vessels_to_map(fig, vessels)
-
-    # Update layout
-    fig.update_layout(
-        title={
-            "text": f"Maritime Traffic Visualization ({len(vessels)} vessels)",
-            "x": 0.5,
-            "xanchor": "center",
-            "y": 0.95,
-            "yanchor": "top",
-            "font": {"size": 24, "color": "#333"},
-        },
-        height=900,
-    )
-
-    return fig
-
-
-@callback(
-    Output("vessel-stats", "children"),
-    Input("vessel-data-store", "data"),
-)
-def update_stats(vessels: list[dict[str, Any]]) -> str:
-    """Update the statistics display."""
     if not vessels:
         return "No vessel data"
 
     # Count by type
     type_counts = {}
-    for v in vessels:
-        vtype = v["type"]
+    speeds = []
+    for vessel_id, vessel in vessels.items():
+        v = simulation.get_vessel(vessel_id)
+        vtype = v["vessel_type"]
         type_counts[vtype] = type_counts.get(vtype, 0) + 1
+        speeds.append(v["speed"])
 
-    # Calculate statistics
-    speeds = [v["speed"] for v in vessels]
     avg_speed = sum(speeds) / len(speeds) if speeds else 0
     max_speed = max(speeds) if speeds else 0
 
     stats_text = f"""Total Vessels: {len(vessels)}
+Time: {state["time"]:.1f} hours
+Simulation: {"Running" if state["is_running"] else "Paused"}
 
 By Type:
 """
@@ -132,6 +93,75 @@ By Type:
 Max Speed: {max_speed:.1f} knots"""
 
     return stats_text.strip()
+
+
+@callback(
+    Output("traffic-map", "figure"),
+    Output("vessel-stats", "children"),
+    Input("simulation-interval", "n_intervals"),
+    Input("play-button", "n_clicks"),
+    Input("pause-button", "n_clicks"),
+    Input("step-button", "n_clicks"),
+    Input("reset-button", "n_clicks"),
+    Input("last-update", "data"),
+    prevent_initial_call=True,
+)
+def update_simulation(
+    n_intervals: int | None,
+    play_clicks: int | None,
+    pause_clicks: int | None,
+    step_clicks: int | None,
+    reset_clicks: int | None,
+    last_update: str | None,
+) -> tuple[go.Figure, str]:
+    """Update simulation state and map display."""
+    from dash import callback_context
+
+    # Determine which button was clicked
+    if not callback_context.triggered:
+        # Initial load - just display current state
+        pass
+    else:
+        trigger_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+
+        if trigger_id == "play-button":
+            simulation.start()
+        elif trigger_id == "pause-button":
+            simulation.pause()
+        elif trigger_id == "step-button":
+            simulation.step(time_delta=1.0)
+        elif trigger_id == "reset-button":
+            simulation.reset()
+            simulation.pause()
+
+    # If simulation is running, step forward on interval
+    if simulation.get_state()["is_running"]:
+        simulation.step(time_delta=1.0)
+
+    # Get current vessel positions
+    vessels = simulation.get_vessel_positions()
+
+    # Create the map with default style
+    fig = create_base_map()
+    fig = add_vessels_to_map(fig, vessels)
+
+    # Update layout
+    fig.update_layout(
+        title={
+            "text": f"Maritime Traffic Simulation ({len(vessels)} vessels)",
+            "x": 0.5,
+            "xanchor": "center",
+            "y": 0.95,
+            "yanchor": "top",
+            "font": {"size": 24, "color": "#333"},
+        },
+        height=900,
+    )
+
+    # Update stats
+    stats_text = update_simulation_stats()
+
+    return fig, stats_text
 
 
 @callback(
