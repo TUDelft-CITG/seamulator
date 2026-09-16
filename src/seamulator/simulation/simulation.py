@@ -13,28 +13,49 @@ from seamulator.simulation.route_calculator import RouteCalculator
 
 
 class VesselState(TypedDict):
-    """Represents the state of a single vessel in the simulation."""
+    """Represents the state of a single vessel in the simulation.
+
+    Attributes:
+        id: Unique identifier for the vessel.
+        name: Name of the vessel.
+        vessel_type: Type/category of the vessel (e.g., Cargo, Tanker).
+        current_port: Name of the current port the vessel is at or came from.
+        destination_port: Name of the destination port the vessel is heading to.
+        speed: Speed of the vessel in knots.
+        route: List of (lat, lon) waypoints for vessel's path.
+        current_position: Current (latitude, longitude) position.
+        route_index: Current index in the route list.
+        color: Color associated with the vessel type for visualization.
+        size: Size of the vessel for visualization scaling.
+    """
 
     id: int
     name: str
     vessel_type: str
     current_port: str
     destination_port: str
-    speed: float  # knots
-    route: list[tuple[float, float]]  # List of (lat, lon) waypoints
-    current_position: tuple[float, float]  # (lat, lon)
-    route_index: int  # Current position in the route
+    speed: float
+    route: list[tuple[float, float]]
+    current_position: tuple[float, float]
+    route_index: int
     color: str
     size: float
 
 
 class SimulationState(TypedDict):
-    """Represents the overall simulation state."""
+    """Represents the overall simulation state.
+
+    Attributes:
+        vessels: Dictionary of all vessels indexed by vessel ID.
+        time: Current simulation time in hours.
+        is_running: Whether the simulation is currently running or paused.
+        speed_factor: Simulation speed multiplier (1.0 = normal speed).
+    """
 
     vessels: dict[int, VesselState]
-    time: float  # Simulation time in hours
+    time: float
     is_running: bool
-    speed_factor: float  # Simulation speed multiplier
+    speed_factor: float
 
 
 class MaritimeSimulation:
