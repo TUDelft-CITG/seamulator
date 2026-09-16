@@ -80,7 +80,7 @@ class TestMapComponents:
         # Center is a Center object in plotly 7
         assert fig.layout.map.center.lat == 55
         assert fig.layout.map.center.lon == 5
-        assert fig.layout.map.zoom == 4
+        assert fig.layout.map.zoom == 5
 
     def test_get_vessel_marker_size(self):
         """Test marker size calculation."""

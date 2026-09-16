@@ -13,6 +13,8 @@ dependencies = [
     "pandas>=2.2.0",
     "numpy>=1.26.0",
     "ruff>=0.16.7",
+    "searoute>=1.6.0",
+    "networkx>=3.0",
 ]
 
 [dependency-groups]

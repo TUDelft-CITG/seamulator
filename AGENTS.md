@@ -46,6 +46,7 @@ Build a **macro-scale maritime traffic simulator** with interactive visualizatio
 - **Data Validation**: pandera
 - **Type System**: Full type hints with mypy, typing library
 - **Code Quality**: ruff
+- **Routing**: searoute, networkx
 
 ## Agent Guidelines
 
@@ -89,7 +90,7 @@ seamulator/
 │   ├── visualization/  # All UI/visualization code
 │   │   ├── components/ # Reusable UI components
 │   │   └── styles/    # CSS and styling
-│   └── simulation/    # Simulation engine (future)
+│   └── simulation/    # Discrete event simulation engine
 ├── tests/              # All tests
 └── docs/              # Documentation (future)
 ```
@@ -104,7 +105,21 @@ seamulator/
   - Statistics panel
   - 9 passing tests
 
-- **Next**: Phase 2 - Data Pipeline
+- **Phase 2**: COMPLETE ✓
+  - North Sea focus: ports and vessel spawning in North Sea region
+  - Map centered on North Sea (55°N, 5°E) with zoom level 5
+
+- **Phase 3**: IN PROGRESS
+  - Discrete event-time simulation engine
+  - searoute library integration for maritime route calculation
+  - Vessel movement along calculated paths
+  - Vessel state: position, speed (5-15 knots), route, destination
+  - Simulation controls: start, pause, reset, set_speed_factor
+  - RouteCalculator class for pathfinding between ports
+  - MaritimeSimulation class with step-based advancement
+  - 13 new tests for simulation functionality
+
+- **Next**: Phase 3 - Simulation visualization integration
 
 ## Quick Start
 
@@ -118,14 +133,14 @@ uv run python -m seamulator.visualization.app
 uv run python -m pytest tests/ -v
 
 # Linting and Formatting
-uv run ruff check src/
-uv run ruff format src/
+uv run ruff check src/ tests/
+uv run ruff format src/ tests/
 ```
 
 ## Workflow Requirements
 
 **After completing ANY task:**
-1. Run `ruff check src/` - fix any errors
-2. Run `ruff format src/` - auto-format all files
+1. Run `ruff check src/ tests/` - fix any errors
+2. Run `ruff format src/ tests/` - auto-format all files
 3. Run tests to ensure nothing broke
 4. Commit changes
