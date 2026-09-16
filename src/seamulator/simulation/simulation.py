@@ -9,6 +9,7 @@ import numpy as np
 from haversine import Unit, haversine
 from typing_extensions import TypedDict
 
+from seamulator.core.logging_config import logger
 from seamulator.data.sample_data import PORTS
 from seamulator.simulation.route_calculator import RouteCalculator
 
@@ -177,14 +178,22 @@ class MaritimeSimulation:
         Args:
             time_delta: Time to advance in hours.
         """
+        logger.debug(f"Starting simulation step with time_delta={time_delta}")
+
         if not self.state["is_running"]:
+            logger.debug("Simulation is paused, skipping step")
             return
 
         # Apply speed factor
         effective_time_delta = time_delta * self.state["speed_factor"]
         self.state["time"] += effective_time_delta
+        logger.debug(
+            f"Simulation time advanced by {effective_time_delta:.2f} hours. "
+            f"Total time: {self.state['time']:.2f} hours"
+        )
 
         vessels_to_update = {}
+        logger.debug(f"Processing {len(self.state['vessels'])} vessels")
 
         for vessel_id, vessel in self.state["vessels"].items():
             vessel = self._get_vessel_from_dict(vessel)
@@ -243,6 +252,8 @@ class MaritimeSimulation:
         for vessel_id, vessel in vessels_to_update.items():
             self.state["vessels"][vessel_id] = vessel
 
+        logger.debug(f"Updated {len(vessels_to_update)} vessels")
+
     def _step_vessel(self, vessel: VesselState, time_delta: float) -> None:
         """Helper to step a single vessel (for recursive calls).
 
@@ -250,7 +261,12 @@ class MaritimeSimulation:
             vessel: The vessel to update.
             time_delta: Remaining time to advance.
         """
+        logger.debug(
+            f"Stepping vessel {vessel['id']} with remaining time {time_delta:.2f}"
+        )
+
         if vessel["route_index"] >= len(vessel["route"]) - 1:
+            logger.debug(f"Vessel {vessel['id']} reached end of route")
             return
 
         current_pos = vessel["current_position"]
@@ -259,6 +275,9 @@ class MaritimeSimulation:
         # Update heading to next waypoint
         vessel["heading"] = calculate_bearing(
             current_pos[0], current_pos[1], next_pos[0], next_pos[1]
+        )
+        logger.debug(
+            f"Vessel {vessel['id']} heading updated to {vessel['heading']:.2f}°"
         )
 
         distance_nm = haversine(current_pos, next_pos, unit=Unit.NAUTICAL_MILES)

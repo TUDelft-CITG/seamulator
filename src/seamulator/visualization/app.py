@@ -6,22 +6,23 @@ from typing import Any
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, callback, dcc, html
 
+from seamulator.core.logging_config import logger
 from seamulator.simulation.simulation import MaritimeSimulation
 from seamulator.visualization.components.controls import (
     create_control_panel,
     create_info_panel,
 )
-from seamulator.visualization.components.map import (
-    add_vessels_to_map,
-    create_base_map,
-)
+from seamulator.visualization.components.traffic_map import TrafficMap
 
 # Global settings
-NUM_VESSELS = 20
+NUM_VESSELS = 100
 
 # Initialize the simulation backend
 simulation = MaritimeSimulation(num_vessels=NUM_VESSELS)
 simulation.pause()
+
+# Initialize the traffic map
+traffic_map = TrafficMap()
 
 # Initialize the Dash app
 app = Dash(__name__, suppress_callback_exceptions=True)
@@ -29,13 +30,13 @@ app = Dash(__name__, suppress_callback_exceptions=True)
 # App layout
 app.layout = html.Div(
     [
-        # Store for simulation state
+        # Store for last update
         dcc.Store(id="last-update", data=datetime.now(UTC).isoformat()),
         # Interval for auto-update when playing
-        dcc.Interval(id="simulation-interval", interval=500, n_intervals=0),
         # Map container
         html.Div(
             [
+                dcc.Interval(id="simulation-interval", interval=1000, n_intervals=0),
                 dcc.Graph(
                     id="traffic-map",
                     config={
@@ -44,6 +45,7 @@ app.layout = html.Div(
                         "modeBarButtonsToRemove": ["lasso2d", "select2d"],
                     },
                     style={"width": "100vw", "height": "100vh"},
+                    figure=traffic_map.get_figure(),
                 ),
                 # Control Panel
                 create_control_panel([]),
@@ -98,6 +100,7 @@ Max Speed: {max_speed:.1f} knots"""
 @callback(
     Output("traffic-map", "figure"),
     Output("vessel-stats", "children"),
+    Output("simulation-interval", "disabled"),
     Input("simulation-interval", "n_intervals"),
     Input("play-button", "n_clicks"),
     Input("pause-button", "n_clicks"),
@@ -117,51 +120,47 @@ def update_simulation(
     """Update simulation state and map display."""
     from dash import callback_context
 
+    logger.debug("Update simulation callback triggered")
+    disabled = False
     # Determine which button was clicked
     if not callback_context.triggered:
         # Initial load - just display current state
+        logger.debug("Initial load, displaying current state")
         pass
     else:
         trigger_id = callback_context.triggered[0]["prop_id"].split(".")[0]
+        logger.debug(f"Triggered by: {trigger_id}")
 
         if trigger_id == "play-button":
+            logger.debug("Play button clicked")
             simulation.start()
         elif trigger_id == "pause-button":
+            logger.debug("Pause button clicked")
+            disabled = True
             simulation.pause()
         elif trigger_id == "step-button":
+            logger.debug("Step button clicked")
             simulation.step(time_delta=1.0)
         elif trigger_id == "reset-button":
+            logger.debug("Reset button clicked")
             simulation.reset()
             simulation.pause()
 
     # If simulation is running, step forward on interval
     if simulation.get_state()["is_running"]:
+        logger.debug("Simulation is running, stepping forward")
         simulation.step(time_delta=1.0)
 
-    # Get current vessel positions
+    # Get current vessel positions and update the map
+    logger.debug("Getting vessel positions")
     vessels = simulation.get_vessel_positions()
-
-    # Create the map with default style
-    fig = create_base_map()
-    fig = add_vessels_to_map(fig, vessels)
-
-    # Update layout
-    fig.update_layout(
-        title={
-            "text": f"Maritime Traffic Simulation ({len(vessels)} vessels)",
-            "x": 0.5,
-            "xanchor": "center",
-            "y": 0.95,
-            "yanchor": "top",
-            "font": {"size": 24, "color": "#333"},
-        },
-        height=900,
-    )
+    logger.debug(f"Updating traffic map with {len(vessels)} vessels")
+    traffic_map.update_vessels(vessels)
 
     # Update stats
     stats_text = update_simulation_stats()
 
-    return fig, stats_text
+    return traffic_map.get_figure(), stats_text, disabled
 
 
 @callback(

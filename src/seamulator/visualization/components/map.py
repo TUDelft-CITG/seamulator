@@ -5,18 +5,7 @@ from typing import Any
 import plotly.express as px
 import plotly.graph_objects as go
 
-
-def create_triangle_path() -> str:
-    """Create SVG path for a triangle marker.
-
-    Returns:
-        SVG path string for an equilateral triangle pointing upwards.
-    """
-    # Triangle with base at bottom, pointing up (north)
-    # Coordinates: top (0,1), bottom-left (-0.5,-0.5), bottom-right (0.5,-0.5)
-    # Normalized to fit in a 1x1 box
-    return "M 0 0.5 L -0.5 -0.5 L 0.5 -0.5 Z"
-
+from seamulator.core.logging_config import logger
 
 # Mapbox access token (using public token for basic functionality)
 # MAPBOX_TOKEN = (
@@ -33,6 +22,7 @@ def create_base_map(style: str = "open-street-map") -> go.Figure:
     Returns:
         Plotly figure with map configured.
     """
+    logger.error("Creating Base Map")
     fig = go.Figure()
 
     fig.update_layout(
@@ -127,7 +117,7 @@ def add_vessels_to_map(
         # Use custom triangle markers with rotation based on heading
         # Convert compass bearing (0=N, 90=E) to plotly angle (0=E, 90=N)
         angles = [90 - h for h in headings]
-        triangle_path = create_triangle_path()
+        triangle_path = "M 0 0.5 L -0.5 -0.5 L 0.5 -0.5 Z"
 
         fig.add_trace(
             go.Scattermap(
