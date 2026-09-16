@@ -1,5 +1,7 @@
 """Tests for density heatmap calculation."""
 
+import geopandas as gpd
+import numpy as np
 import pytest
 
 from seamulator.simulation.density_heatmap import DensityHeatmap
@@ -138,7 +140,8 @@ class TestDensityHeatmap:
         """Test get_geometry with no calculated density."""
         result = heatmap.get_geometry()
 
-        assert result == []
+        assert isinstance(result, gpd.GeoDataFrame)
+        assert len(result) == 0
 
     def test_get_geometry_with_density(self, heatmap: DensityHeatmap) -> None:
         """Test get_geometry after calculating density."""
@@ -147,24 +150,24 @@ class TestDensityHeatmap:
 
         result = heatmap.get_geometry()
 
+        assert isinstance(result, gpd.GeoDataFrame)
         assert len(result) >= 1
 
         # Check structure of result
-        for item in result:
-            assert "h3_index" in item
-            assert "center" in item
-            assert "vertices" in item
-            assert "density" in item
-            assert "count" in item
+        assert "h3_index" in result.columns
+        assert "center_lat" in result.columns
+        assert "center_lon" in result.columns
+        assert "density" in result.columns
+        assert "count" in result.columns
+        assert "geometry" in result.columns
 
-            # Check types
-            assert isinstance(item["h3_index"], str)
-            assert isinstance(item["center"], tuple)
-            assert len(item["center"]) == 2
-            assert isinstance(item["vertices"], list)
-            assert len(item["vertices"]) >= 3  # Hexagon has at least 3 vertices
-            assert isinstance(item["density"], float)
-            assert isinstance(item["count"], int)
+        # Check types for first row
+        first_row = result.iloc[0]
+        assert isinstance(first_row["h3_index"], str)
+        assert np.issubdtype(type(first_row["center_lat"]), np.floating)
+        assert np.issubdtype(type(first_row["center_lon"]), np.floating)
+        assert np.issubdtype(type(first_row["density"]), np.floating)
+        assert np.issubdtype(type(first_row["count"]), np.integer)
 
     def test_get_geometry_center_valid(self, heatmap: DensityHeatmap) -> None:
         """Test that geometry centers are valid coordinates."""
@@ -173,12 +176,11 @@ class TestDensityHeatmap:
 
         result = heatmap.get_geometry()
 
-        for item in result:
-            center = item["center"]
+        for _, row in result.iterrows():
             # Valid latitude: -90 to 90
-            assert -90 <= center[0] <= 90
+            assert -90 <= row["center_lat"] <= 90
             # Valid longitude: -180 to 180
-            assert -180 <= center[1] <= 180
+            assert -180 <= row["center_lon"] <= 180
 
     def test_get_geometry_vertices_valid(self, heatmap: DensityHeatmap) -> None:
         """Test that geometry vertices are valid coordinates."""
@@ -187,9 +189,24 @@ class TestDensityHeatmap:
 
         result = heatmap.get_geometry()
 
-        for item in result:
-            for vertex in item["vertices"]:
-                # Valid latitude: -90 to 90
-                assert -90 <= vertex[0] <= 90
-                # Valid longitude: -180 to 180
-                assert -180 <= vertex[1] <= 180
+        for _, row in result.iterrows():
+            # Check that geometry is a valid polygon
+            assert row["geometry"] is not None
+            # Get polygon exterior coordinates
+            if hasattr(row["geometry"], "exterior"):
+                for x, y in row["geometry"].exterior.coords:
+                    # Valid latitude: -90 to 90 (y coordinate)
+                    assert -90 <= y <= 90
+                    # Valid longitude: -180 to 180 (x coordinate)
+                    assert -180 <= x <= 180
+
+    def test_get_geometry_has_crs(self, heatmap: DensityHeatmap) -> None:
+        """Test that GeoDataFrame has correct CRS (EPSG:4326)."""
+        vessel_positions = [(52.3676, 4.9041)]
+        heatmap.calculate_density(vessel_positions)
+
+        result = heatmap.get_geometry()
+
+        assert result.crs is not None
+        # Check that CRS is WGS84 (EPSG:4326)
+        assert result.crs.to_epsg() == 4326

@@ -17,6 +17,8 @@ dependencies = [
     "networkx>=3.0",
     "haversine>=2.5.0",
     "h3>=4.0.0",
+    "geopandas>=1.0.0",
+    "shapely>=2.0.0",
 ]
 
 [dependency-groups]

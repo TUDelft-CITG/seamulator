@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
+import geopandas as gpd
 import h3
+import shapely
+
+if TYPE_CHECKING:
+    from geopandas import GeoDataFrame
 
 
 class DensityHeatmap:
@@ -62,18 +67,19 @@ class DensityHeatmap:
 
         return self.density_values
 
-    def get_geometry(self) -> list[dict[str, Any]]:
-        """Get the geometry representation of the H3 grid.
+    def get_geometry(self) -> GeoDataFrame:
+        """Get the geometry representation of the H3 grid as a GeoDataFrame.
 
         Returns:
-            List of dictionaries containing geometry information for each hexagon:
+            GeoDataFrame containing geometry information for each hexagon with:
             - h3_index: The H3 cell index
-            - center: (latitude, longitude) of cell center
-            - vertices: List of (latitude, longitude) vertices
-            - density: Density value for this cell
+            - center_lat: Latitude of cell center
+            - center_lon: Longitude of cell center
+            - density: Density value for this cell (vessels per km²)
             - count: Number of vessels in this cell
+            - geometry: Polygon geometry of the hexagon
         """
-        geometry_list = []
+        features = []
 
         for h3_index, density in self.density_values.items():
             # Get cell center using h3 v4 API
@@ -82,14 +88,32 @@ class DensityHeatmap:
             # Get cell boundary vertices using h3 v4 API
             vertices = h3.cell_to_boundary(h3_index)
 
-            geometry_list.append(
+            # Create a shapely Polygon from the vertices
+            polygon = shapely.Polygon(vertices)
+
+            features.append(
                 {
                     "h3_index": h3_index,
-                    "center": (center_lat, center_lon),
-                    "vertices": [(float(v[0]), float(v[1])) for v in vertices],
+                    "center_lat": center_lat,
+                    "center_lon": center_lon,
                     "density": density,
                     "count": self.hexagon_counts.get(h3_index, 0),
+                    "geometry": polygon,
                 }
             )
 
-        return geometry_list
+        # Create GeoDataFrame with EPSG:4326 (WGS84) CRS
+        columns = [
+            "h3_index",
+            "center_lat",
+            "center_lon",
+            "density",
+            "count",
+            "geometry",
+        ]
+        if not features:
+            gdf = gpd.GeoDataFrame(columns=columns, crs="EPSG:4326")
+        else:
+            gdf = gpd.GeoDataFrame(features, crs="EPSG:4326")
+
+        return gdf
