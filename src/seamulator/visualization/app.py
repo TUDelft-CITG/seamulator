@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from dash import Dash, Input, Output, callback, dcc, html
 
 from seamulator.core.logging_config import logger
+from seamulator.simulation.density_heatmap import DensityHeatmap
 from seamulator.simulation.simulation import MaritimeSimulation
 from seamulator.visualization.components.controls import (
     create_control_panel,
@@ -15,12 +16,15 @@ from seamulator.visualization.components.controls import (
 from seamulator.visualization.components.traffic_map import TrafficMap
 
 # Global settings
-NUM_VESSELS = 20
+NUM_VESSELS = 50
 TIME_INTERVAL = 500  # ms
 
 # Initialize the simulation backend
 simulation = MaritimeSimulation(num_vessels=NUM_VESSELS)
 simulation.pause()
+
+# Initialize the density heatmap
+density_heatmap = DensityHeatmap(resolution=4)
 
 # Initialize the traffic map
 traffic_map = TrafficMap()
@@ -158,6 +162,12 @@ def update_simulation(
     vessels = simulation.get_vessel_positions()
     logger.info(f"Updating traffic map with {len(vessels)} vessels")
     traffic_map.update_vessels(vessels)
+
+    # Update density heatmap
+    vessel_coords = [(v["lat"], v["lon"]) for v in vessels]
+    density_heatmap.calculate_density(vessel_coords)
+    density_gdf = density_heatmap.get_geometry()
+    traffic_map.update_density(density_gdf)
 
     # Update stats
     stats_text = update_simulation_stats()

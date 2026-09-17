@@ -22,7 +22,7 @@ def create_base_map(style: str = "open-street-map") -> go.Figure:
     Returns:
         Plotly figure with map configured.
     """
-    logger.error("Creating Base Map")
+    logger.info("Creating Base Map")
     fig = go.Figure()
 
     fig.update_layout(

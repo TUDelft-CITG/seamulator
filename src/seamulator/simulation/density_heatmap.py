@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import geopandas as gpd
 import h3
 import shapely
-
-if TYPE_CHECKING:
-    from geopandas import GeoDataFrame
+from geopandas import GeoDataFrame
 
 
 class DensityHeatmap:
@@ -86,10 +82,12 @@ class DensityHeatmap:
             center_lat, center_lon = h3.cell_to_latlng(h3_index)
 
             # Get cell boundary vertices using h3 v4 API
+            # H3 returns vertices as (lat, lon), but shapely/GeoJSON expects (lon, lat)
             vertices = h3.cell_to_boundary(h3_index)
+            vertices_lon_lat = [(v[1], v[0]) for v in vertices]  # Swap to (lon, lat)
 
             # Create a shapely Polygon from the vertices
-            polygon = shapely.Polygon(vertices)
+            polygon = shapely.Polygon(vertices_lon_lat)
 
             features.append(
                 {
